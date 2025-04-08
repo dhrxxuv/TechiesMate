@@ -3,24 +3,58 @@ const connectDB = require('./config/database');
 const User = require('./models/user');
 
 const app = express();
+app.use(express.json());
 
-app.post('/signup',async(req,res)=>{
-    const userobj = {
-        firstname:"Luv",
-        lastname:"neekha",
-        emailId:"Luv@gmail.com",
-        password:"dhruv123",
-        age:24,
-        gender:"male"
+
+app.post('/signup', async (req, res) => {
+    const userobj = req.body;
+    const user = new User(userobj);
+    try {
+        await user.save();
+        res.send("user created");
+    } catch (err) {
+        res.status(500).send(err); 
     }
-    const user = new User(userobj)
+});
+
+
+app.get('/feed', async (req, res) => {
+    try {
+        const allUsers = await User.find({emailId:"Luv@gmail.com"});
+        console.log(allUsers);
+        res.json(allUsers);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+app.delete('/user', async(req,res)=>{
+    const id = req.body._id;
     try{
-        await user.save()
-        res.send("user created")
+        await User.findByIdAndDelete({_id:id})
+        console.log("user deleted")
+        res.send("user deleted");
     }catch(err){
-        res.status(404).send(err)
+        res.status(500).json({error:err.message})
     }
 })
+
+app.patch('/userupdate', async (req, res) => {
+    try {
+        const user = await User.findByIdAndUpdate(req.body._id, req.body, { 
+            new: true, 
+            runValidators: true 
+        });
+
+        if (!user) return res.status(404).send("User not found");
+
+        res.send("User updated successfully");
+    } catch (err) {
+        res.status(400).send(err.message);
+    }
+});
+ 
 
 
 
