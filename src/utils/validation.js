@@ -25,10 +25,31 @@ const validateSignupdata = (req)=>{
 
 
 const validateProfileData = (req) => {
-    const allowedEditFields = ["lastName", "firstName", "gender", "age", "about", "skills", "password"];
+    const allowedEditFields = ["lastName", "firstName", "gender", "age", "about", "skills"];
     return Object.keys(req.body).every(field => allowedEditFields.includes(field));
 };
 
 
-module.exports = {validateSignupdata,
-    validateProfileData}
+const validationPassword = (req) => {
+    const { password, newPassword } = req.body;
+
+    if (!password || !newPassword) {
+        throw new Error("Both current and new passwords are required");
+    }
+
+    if (newPassword.length < 8) {
+        throw new Error("Password must be at least 8 characters");
+    }
+
+    if (password === newPassword) {
+        throw new Error("Current and new passwords cannot be the same");
+    }
+
+    return true;
+};
+
+
+module.exports = {
+    validateSignupdata,
+    validateProfileData,
+    validationPassword}
