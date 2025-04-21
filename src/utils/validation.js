@@ -1,27 +1,33 @@
 const validator = require('validator')
 
-const validateSignupdata = (req)=>{
-    const {firstName,lastName,emailId,password,age} = req.body;
-    if(!firstName||!lastName){
-        throw new Error('Name not Valid')
+const validateSignupdata = (req) => {
+    const { firstName, lastName, emailId, password, age } = req.body;
+
+    if (!firstName || !lastName) {
+        throw new Error('Name not Valid');
+    } else if (firstName.length < 2) {
+        throw new Error('Name should be at least 2 characters long');
     }
-    else if(firstName.length<2){
-        throw new Error('Name should be at least 2 characters long')
+
+    else if (!validator.isStrongPassword(password, {
+        minLength: 6,
+        minLowercase: 1,
+        minUppercase: 0,
+        minNumbers: 0,
+        minSymbols: 0
+    })) {
+        throw new Error('Password is not strong enough');
     }
-    if(!password){
-        throw new Error('Password not Valid')
+
+    if (age < 18) {
+        throw new Error('Age not Valid');
     }
-    if(age<18){
-        throw new Error('Age not Valid')
+
+    if (!validator.isEmail(emailId)) {
+        throw new Error('Email is not valid');
     }
-    if(!validator.isEmail(emailId)){
-        throw new Error('Email is not valid')
-    }
-    if(!validator.isStrongPassword(password)){
-        throw new Error('Password is not strong')
-    }
-    
-}
+};
+
 
 
 const validateProfileData = (req) => {

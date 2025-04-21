@@ -22,5 +22,13 @@ const connectionRequestSchema = new mongoose.Schema({
     timestamps: true
 })
 
-const connectionRequestModel = new mongoose.model("connectionRequest",connectionRequestSchema)
-module.exports = connectionRequestModel
+
+//create compund index on fromUserId and toUserId to make searching more fast 
+connectionRequestSchema.index({fromUserId:1,toUserId:1})
+
+// connectionRequestSchema.pre("save",function(){
+//     const connectionRequest = this
+// })
+
+const ConnectionRequestModel = new mongoose.model("connectionRequest",connectionRequestSchema)
+module.exports = ConnectionRequestModel
