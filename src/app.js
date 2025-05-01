@@ -4,12 +4,13 @@ const User = require('./models/user');
 const bcrypt = require('bcrypt')
 const cookieParser = require('cookie-parser');
 const validator = require('validator');
+const cors = require('cors')
 
 const app = express();
 const {userAuth} = require('./middleware/auth')
 require('dotenv').config();
 
-
+app.use(cors())
 app.use(express.json());
 app.use(cookieParser());
 
