@@ -56,9 +56,9 @@ authRouter.post('/login', async (req, res) => {
             res.cookie("token",token,{
                 expires:new Date(Date.now()+1*3600000)
             })
-            res.status(200).send("Login Successful");
+            res.status(200).send(user);
         } else {
-            throw new Error("Invalid Cradential");
+            throw new Error();
         }
 
     } catch (err) {

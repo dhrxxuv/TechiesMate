@@ -10,7 +10,10 @@ const app = express();
 const {userAuth} = require('./middleware/auth')
 require('dotenv').config();
 
-app.use(cors())
+app.use(cors({
+    origin:"http://http://localhost:5173",
+    credentials:true  
+}))
 app.use(express.json());
 app.use(cookieParser());
 
