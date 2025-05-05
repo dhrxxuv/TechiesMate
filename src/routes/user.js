@@ -63,50 +63,41 @@ userRouter.get('/user/feed', userAuth , async (req,res)=>{
     try{
         const loggedUser = req.user
         const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.page) || 10
-        limit = limit>50?50:limit
-        const calculateSkip = (page-1)*limit
-        const connectionRequestPeople =await ConnectionRequest.find({
-            $or:[
-                {fromUserId:loggedUser._id},
-                {toUserId:loggedUser._id}
+        let limit = parseInt(req.query.limit) || 10
+        limit = limit > 50 ? 50 : limit
+        const calculateSkip = (page - 1) * limit
+
+        const connectionRequestPeople = await ConnectionRequest.find({
+            $or: [
+                { fromUserId: loggedUser._id },
+                { toUserId: loggedUser._id }
             ]
-        }).select("fromUserId toUserId").
-        populate("fromUserId",["firstName","lastName"]).
-        populate("toUserId",["firstName","lastName"])
-   
+        }).select("fromUserId toUserId")
+          .populate("fromUserId", ["firstName", "lastName"])
+          .populate("toUserId", ["firstName", "lastName"])
 
-        
-        
-        const hideUserFromFeed = new Set();
-
-        connectionRequestPeople.forEach((request) => {
-            hideUserFromFeed.add(request.fromUserId._id.toString());
-            hideUserFromFeed.add(request.toUserId._id.toString());
-        });
-
-        const users = await User.find({
-            $and:[
-                {_id:{$ne: loggedUser._id}},
-                {_id: { $nin: Array.from(hideUserFromFeed) }}
-            ]
-            
-        }).select(["firstName", "lastName", "about", "gender"]).
-        skip(calculateSkip).limit(limit); 
-        
-
-        console.log(hideUserFromFeed)
-        res.json({
-            message:[...hideUserFromFeed],
-            user:users
+        const hideUserFromFeed = new Set()
+        connectionRequestPeople.forEach(request => {
+            hideUserFromFeed.add(request.fromUserId._id.toString())
+            hideUserFromFeed.add(request.toUserId._id.toString())
         })
 
-       
-        
-    }catch(err){
-        res.status(404).
-        json({
-            message:"Error "+err.message
+        const users = await User.find({
+            _id: {
+                $ne: loggedUser._id,
+                $nin: Array.from(hideUserFromFeed)
+            }
+        })
+        .select(["firstName", "lastName", "about", "gender"])
+        .skip(calculateSkip).limit(limit)
+
+        res.json({
+            message: "Success",
+            user: users
+        })
+    } catch(err) {
+        res.status(500).json({
+            message: "Error " + err.message
         })
     }
 })
