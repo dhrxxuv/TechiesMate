@@ -6,6 +6,8 @@ const profileRouter = express.Router();
 const bcrypt = require('bcrypt')
 
 
+
+
 profileRouter.get('/profile/view', userAuth, async (req, res) => {
     try {
         res.json({
@@ -17,24 +19,92 @@ profileRouter.get('/profile/view', userAuth, async (req, res) => {
     }
 })
 
-profileRouter.patch('/profile/edit', userAuth , async(req,res)=>{
+profileRouter.patch('/profile/edit', userAuth, async (req, res) => {
     try {
-   
+        // Validate incoming data
         if (!validateProfileData(req)) {
-            throw new Error("Invalid Edit Request");
+            return res.status(400).json({ 
+                error: "Invalid Edit Request",
+                message: "Only firstName, lastName, gender, age, about, and skills can be updated"
+            });
         }
 
-        const loggedInUser = req.user;
-        console.log(loggedInUser)
-        Object.keys(req.body).forEach((key)=>loggedInUser[key]=req.body[key])
-        console.log(loggedInUser)
-       res.json(loggedInUser)
-       await loggedInUser.save()
+        // Get the authenticated user
+        const userId = req.user._id;
+        
+        // Create update object with only allowed fields
+        const updateData = {};
+        const allowedFields = ["firstName", "lastName", "gender", "age", "about", "skills","photoUrl"];
+        
+        allowedFields.forEach(field => {
+            if (req.body[field] !== undefined) {
+                updateData[field] = req.body[field];
+            }
+        });
+
+        // Additional validation for specific fields
+        if (updateData.age && (updateData.age < 18 || updateData.age > 100)) {
+            return res.status(400).json({ 
+                error: "Validation Error",
+                message: "Age must be between 18 and 100"
+            });
+        }
+
+        if (updateData.gender && !["male", "female", "other"].includes(updateData.gender)) {
+            return res.status(400).json({ 
+                error: "Validation Error",
+                message: "Gender must be male, female, or other"
+            });
+        }
+
+        if (updateData.skills && updateData.skills.length > 20) {
+            return res.status(400).json({ 
+                error: "Validation Error",
+                message: "Maximum 20 skills allowed"
+            });
+        }
+
+        // Update the user in database
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $set: updateData },
+            { 
+                new: true, // Return the updated document
+                runValidators: true // Run schema validations
+            }
+        ).select('-password -__v'); // Exclude sensitive fields
+
+        if (!updatedUser) {
+            return res.status(404).json({ 
+                error: "Not Found",
+                message: "User not found"
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Profile updated successfully",
+            user: updatedUser
+        });
+
     } catch (err) {
-        console.error(err); 
-        res.status(500).json({ error: "Internal Server Error" });
+        console.error("Profile update error:", err);
+
+        // Handle Mongoose validation errors
+        if (err.name === 'ValidationError') {
+            const errors = Object.values(err.errors).map(e => e.message);
+            return res.status(400).json({ 
+                error: "Validation Error",
+                messages: errors
+            });
+        }
+
+        res.status(500).json({ 
+            error: "Internal Server Error",
+            message: "Could not update profile"
+        });
     }
-})
+});
 
 
 
