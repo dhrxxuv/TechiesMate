@@ -88,7 +88,7 @@ userRouter.get('/user/feed', userAuth , async (req,res)=>{
                 $nin: Array.from(hideUserFromFeed)
             }
         })
-        .select(["firstName", "lastName", "about", "gender"])
+        .select(["firstName", "lastName", "age","about", "gender","photoUrl","skills"])
         .skip(calculateSkip).limit(limit)
 
         res.json({
