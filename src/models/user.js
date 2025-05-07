@@ -55,7 +55,18 @@ const userSchema = new mongoose.Schema({
         validate(value){
             return value.length <= 20
         }
+    },
+    
+    location: {
+        type: String,
+        validate: {
+            validator: function(v) {
+                return /^[A-Za-z\s]+$/.test(v);
+            },
+            message: props => `${props.value} is not a valid location! Only alphabetic characters are allowed.`
+        },
     }
+
 
 },{
     timestamps:true 
