@@ -7,29 +7,60 @@ const authRouter = express.Router()
 const jwt = require('jsonwebtoken')
 
 authRouter.post('/signup', async (req, res) => {
-    try {
-        validateSignupdata(req);
+  try {
+    validateSignupdata(req);
 
-        const { firstName, lastName, emailId, password, age, gender, skills } = req.body;
+    const { firstName, lastName, emailId, password, age, gender, skills, about, location } = req.body;
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-        const userobj = {
-            firstName,
-            lastName,
-            emailId,
-            password: hashedPassword,
-            age,
-            gender,
-            skills
-        };
+    const userobj = {
+      firstName,
+      lastName,
+      emailId: emailId.toLowerCase(),
+      password: hashedPassword,
+      age,
+      gender,
+      skills: skills || [],
+      about: about || 'You Know Me',
+      location,
+    };
 
-        const user = new User(userobj);
-        await user.save();
-        res.send("User created");
-    } catch (err) {
-        res.status(500).json({ error: err.message }); 
-    }
+    const user = new User(userobj);
+    await user.save();
+
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, {
+      expiresIn: '1h',
+    });
+
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Secure in production
+      sameSite: 'strict',
+      expires: new Date(Date.now() + 1 * 3600000), // 1 hour
+    });
+
+
+    res.status(201).json({
+      message: 'User created successfully',
+      data: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        emailId: user.emailId,
+        age: user.age,
+        gender: user.gender,
+        skills: user.skills,
+        about: user.about,
+        location: user.location,
+      },
+    });
+  } catch (err) {
+    console.error('Signup error:', err);
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
+  }
 });
 
 authRouter.post('/login', async (req, res) => {
