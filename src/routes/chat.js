@@ -10,14 +10,14 @@ chatRouter.get('/chat/:targetUserId', userAuth, async (req, res) => {
     const userId = req.user._id;
 
     try {
-        const isFriend = await ConnectionRequestModel.findOne({
+        const areTheyConnected = await ConnectionRequestModel.findOne({
             $or:[
                 {fromUserId:userId, toUserId:targetUserId, status:"accepted"},
                 {fromUserId:targetUserId, toUserId:userId, status:"accepted"}
             ]
         })
 
-        if(!isFriend) return res.status(404).json({ message: "Use are Friend" });
+        if(!areTheyConnected) return res.status(404).json({ message: "Use are Friend" });
         let chat = await Chat.findOne({
             participants: { $all: [userId, targetUserId] }
         }).populate({
