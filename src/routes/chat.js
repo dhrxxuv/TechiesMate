@@ -11,7 +11,7 @@ chatRouter.get('/chat/:targetUserId', userAuth, async (req, res) => {
 
     try {
         const isFriend = await ConnectionRequestModel.findOne({
-            or:[
+            $or:[
                 {fromUserId:userId, toUserId:targetUserId, status:"accepted"},
                 {fromUserId:targetUserId, toUserId:userId, status:"accepted"}
             ]
