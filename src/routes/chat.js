@@ -18,6 +18,7 @@ chatRouter.get('/chat/:targetUserId', userAuth, async (req, res) => {
         })
 
         if(!areTheyConnected) return res.status(404).json({ message: "Use are Friend" });
+;
         let chat = await Chat.findOne({
             participants: { $all: [userId, targetUserId] }
         }).populate({
