@@ -5,7 +5,7 @@ const validator = require('validator')
 const {validateSignupdata} = require('../utils/validation')
 const authRouter = express.Router()
 const jwt = require('jsonwebtoken')
-
+const { userAuth } = require('../middleware/auth');
 authRouter.post('/signup', async (req, res) => {
   try {
     validateSignupdata(req);
@@ -80,10 +80,13 @@ authRouter.post('/login', async (req, res) => {
         const isPassValid = await bcrypt.compare(password, user.password); 
 
         if (isPassValid) {
+            user.OnlineStatus = true;
+            await user.save();
             const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY,{
                 expiresIn: '1h'
             })
             console.log(token)
+
             res.cookie("token",token,{
                 expires:new Date(Date.now()+1*3600000)
             })
@@ -97,7 +100,11 @@ authRouter.post('/login', async (req, res) => {
     }
 });
 
-authRouter.post('/logout',async (req,res)=>{
+authRouter.post('/logout',userAuth,async (req,res)=>{
+
+  const user = req.user
+  user.OnlineStatus = false;
+   await user.save();
     res.cookie("token",null,{
         expires:new Date(Date.now())
     })

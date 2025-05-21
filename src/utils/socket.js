@@ -23,9 +23,9 @@ const initializeSocket = (server) => {
             socket.join(roomId);
         });
 
-        socket.on("sendMessage", async ({ firstName, userId, targetUserId, text }) => {
+        socket.on("sendMessage", async ({ firstName,lastName, userId, targetUserId, text }) => {
             const roomId = getRoomId(userId, targetUserId);
-            console.log("message from", firstName, ":", text);
+            console.log("message from", firstName, lastName, ":", text)
 
             try {
                 let chat = await Chat.findOne({
@@ -45,15 +45,20 @@ const initializeSocket = (server) => {
                 });
 
                 await chat.save();
+
+                const lastMsg = chat.messages[chat.messages.length - 1];
+
+                io.to(roomId).emit("messageReceived", {
+                    sender: firstName,
+                    senderLast: lastName,
+                    text: lastMsg.text,
+                    time: lastMsg.createdAt // Use real Mongo timestamp
+                });
             } catch (err) {
                 console.error("Error saving message:", err);
             }
 
-            io.to(roomId).emit("messageReceived", {
-                sender: firstName,
-                text,
-                time: new Date().toLocaleTimeString()
-            });
+
         });
 
         socket.on("disconnect", () => {
